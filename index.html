@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rylines - Premium</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        * { box-sizing: border-box; font-family: 'Montserrat', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; padding: 0; background: #f4f7f6; color: #1a1a1a; min-height: 100vh; display: flex; justify-content: center; overflow-x: hidden; }
+        .app-container { width: 100%; max-width: 420px; background: #ffffff; min-height: 100vh; position: relative; display: flex; flex-direction: column; box-shadow: 0 0 40px rgba(0,0,0,0.05); }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+        
+        .btn-red { background: linear-gradient(135deg, #ff3b30, #d32f2f); color: white; border: none; padding: 16px; border-radius: 12px; font-weight: 800; width: 100%; font-size: 15px; text-transform: uppercase; cursor: pointer; box-shadow: 0 8px 20px rgba(255, 59, 48, 0.2); transition: 0.2s; letter-spacing: 1px;}
+        .btn-red:active { transform: scale(0.96); }
+        .input-wrapper { position: relative; margin-bottom: 15px; }
+        .input-wrapper i { position: absolute; left: 16px; top: 18px; color: #888; font-size: 16px;}
+        .input-box { background: #f8f9fa; border: 1.5px solid #eaeaea; padding: 16px 16px 16px 45px; border-radius: 12px; color: #2d3436; width: 100%; font-size: 15px; outline: none; font-weight: 600; transition: 0.3s;}
+        .input-box:focus { border-color: #ff3b30; background: #fff; box-shadow: 0 0 0 3px rgba(255,59,48,0.1);}
+
+        .view-section { display: none; flex-direction: column; flex-grow: 1; padding: 20px; padding-bottom: 90px; animation: slideUp 0.4s ease; overflow-y: auto;}
+        .active-view { display: flex; }
+
+        .home-brand-top { display: flex; justify-content: space-between; align-items: center; padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px solid #eee; }
+        .home-brand-title { font-size: 24px; font-weight: 900; color: #111; margin: 0; letter-spacing: 1px;}
+        .home-brand-title span { color: #ff3b30; }
+        .dynamic-logo { max-height: 40px; border-radius: 6px;}
+
+        .carousel-container { width: 100%; height: 160px; border-radius: 16px; overflow: hidden; position: relative; margin-bottom: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); background: #eee; }
+        .carousel-slide { width: 100%; height: 100%; object-fit: cover; position: absolute; top: 0; left: 0; opacity: 0; transition: opacity 0.6s ease-in-out; }
+        .carousel-slide.active-slide { opacity: 1; z-index: 1; }
+        
+        .marquee-box { background: #fff1f0; border-left: 4px solid #ff3b30; padding: 8px 10px; border-radius: 6px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: #ff3b30; }
+
+        .action-row { display: flex; gap: 15px; margin-bottom: 25px; }
+        .action-btn { flex: 1; background: #fff; padding: 15px; border-radius: 16px; text-align: center; border: 1px solid #eaeaea; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.02); transition: 0.2s;}
+        .action-btn:active { transform: scale(0.95); }
+        .action-btn i { font-size: 24px; color: #ff3b30; margin-bottom: 8px; }
+
+        .tab-container { display: flex; background: #f1f3f5; border-radius: 12px; padding: 5px; margin-bottom: 15px; }
+        .tab { flex: 1; text-align: center; padding: 12px; font-weight: 800; color: #636e72; border-radius: 8px; cursor: pointer; font-size: 13px; transition: 0.3s; }
+        .tab.active { background: #fff; color: #ff3b30; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+        /* 🔥 VIP VS ADVANCE PRODUCT STYLES 🔥 */
+        .prod-card { background: #fff; border-radius: 18px; overflow: hidden; margin-bottom: 18px; border: 1px solid #eaeaea; box-shadow: 0 8px 25px rgba(0,0,0,0.04); position: relative;}
+        .prod-card.vip-card { background: linear-gradient(135deg, #111, #222); color: #fff; border: 1px solid #d4af37; box-shadow: 0 10px 30px rgba(212, 175, 55, 0.2);}
+        
+        .prod-img { width: 100%; height: 160px; object-fit: cover; background: #f8f9fa; }
+        .prod-body { padding: 16px; }
+        
+        .prod-cat { font-size: 10px; font-weight: 900; background: rgba(255,59,48,0.1); color: #ff3b30; padding: 4px 8px; border-radius: 4px; display: inline-block; margin-bottom: 8px; text-transform: uppercase;}
+        .vip-card .prod-cat { background: rgba(212, 175, 55, 0.2); color: #d4af37; }
+        
+        .prod-title { font-size: 18px; font-weight: 900; margin: 0 0 12px 0; }
+        
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-box { background: #f8f9fa; padding: 10px; border-radius: 10px; display: flex; align-items: center; gap: 10px; border: 1px solid #eee; }
+        .vip-card .stat-box { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+        .stat-icon { width: 32px; height: 32px; background: #fff; border-radius: 8px; display: flex; justify-content: center; align-items: center; color: #00b894; font-size: 14px;}
+        .vip-card .stat-icon { background: #000; color: #d4af37; }
+        .stat-label { font-size: 10px; color: #888; font-weight: 700; text-transform: uppercase; }
+        .stat-val { font-size: 14px; font-weight: 900; }
+
+        .prod-footer { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed #eaeaea; padding-top: 15px; }
+        .vip-card .prod-footer { border-color: rgba(255,255,255,0.1); }
+        .price-text { font-size: 24px; font-weight: 900; color: #ff3b30; }
+        .vip-card .price-text { color: #d4af37; }
+        .btn-vip { background: linear-gradient(135deg, #d4af37, #b8860b); color: #000; }
+        
+        /* 💳 DEBIT CARD UI 💳 */
+        .recharge-top-bar { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.02);}
+        .debit-card { background: linear-gradient(135deg, #ff3b30, #900000); border-radius: 20px; padding: 25px; color: #fff; margin-bottom: 25px; box-shadow: 0 15px 30px rgba(255,59,48,0.3); position: relative; overflow: hidden; aspect-ratio: 1.586; display: flex; flex-direction: column; justify-content: space-between;}
+        .dc-chip { width: 45px; height: 35px; background: linear-gradient(135deg, #ffd700, #daa520); border-radius: 6px; position: relative; border: 1px solid rgba(0,0,0,0.3); overflow: hidden; }
+        .dc-chip::before { content:''; position:absolute; top:25%; left:0; width:100%; height:1px; background:rgba(0,0,0,0.3); box-shadow: 0 15px 0 rgba(0,0,0,0.3); }
+        .dc-chip::after { content:''; position:absolute; top:0; left:30%; width:1px; height:100%; background:rgba(0,0,0,0.3); box-shadow: 15px 0 0 rgba(0,0,0,0.3); }
+        .dc-code { font-size: 22px; font-weight: 800; letter-spacing: 3px; font-family: monospace; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+
+        .menu-list { background: #fff; border-radius: 16px; border: 1px solid #eee; margin-bottom: 15px;}
+        .menu-item { padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f1f3f5; cursor: pointer; font-weight: 700; font-size: 13px; color: #1a1a1a; }
+        .menu-item i.icon-left { font-size: 18px; color: #ff3b30; width: 25px; }
+
+        /* LIVE PURCHASES */
+        .order-card { background: #fff; border-radius: 16px; padding: 15px; margin-bottom: 15px; border: 1px solid #eee; box-shadow: 0 5px 15px rgba(0,0,0,0.03); }
+        .order-top { display: flex; gap: 15px; align-items: center; border-bottom: 1px dashed #eee; padding-bottom: 15px; margin-bottom: 15px;}
+        .order-icon { width: 50px; height: 50px; background: rgba(0,184,148,0.1); border-radius: 12px; display: flex; justify-content: center; align-items: center; color: #00b894; font-size: 24px; }
+        .live-earn-box { background: #f8f9fa; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #eaeaea; }
+        .live-earn-text { font-size: 24px; font-weight: 900; color: #00b894; font-family: monospace; letter-spacing: 1px; }
+
+        /* Support Grid */
+        .support-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .support-card { background: #fff; border: 1px solid #eee; border-radius: 16px; padding: 20px; text-align: center; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.03); transition: 0.2s;}
+        .support-card:active { transform: scale(0.95); }
+        .support-card i { font-size: 35px; color: #2196F3; margin-bottom: 10px; }
+
+        .chip-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
+        .amt-chip { background: #f8f9fa; border: 1px solid #ddd; padding: 10px; border-radius: 8px; text-align: center; font-weight: 800; cursor: pointer; font-size: 13px; color: #333; transition: 0.2s;}
+        .amt-chip:active { background: #ff3b30; color: white; }
+
+        .bottom-nav { position: fixed; bottom: 0; width: 100%; max-width: 420px; background: rgba(255, 255, 255, 0.98); border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 12px 0; z-index: 100;}
+        .nav-link { display: flex; flex-direction: column; align-items: center; color: #b2bec3; font-size: 10px; font-weight: 800; cursor: pointer; width: 33%; }
+        .nav-link i { font-size: 20px; margin-bottom: 4px; }
+        .nav-link.active { color: #ff3b30; }
+
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 999; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .modal-box { background: #fff; width: 85%; max-width: 340px; border-radius: 24px; padding: 25px; text-align: center; position: relative; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        .success-circle { width: 70px; height: 70px; background: #00b894; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin: 0 auto 15px auto; box-shadow: 0 10px 20px rgba(0,184,148,0.3); animation: popIn 0.5s ease; }
+        .success-circle i { font-size: 35px; color: #fff; }
+
+        .powered-footer { text-align: center; padding: 20px 0; font-size: 10px; font-weight: 800; color: #b2bec3; text-transform: uppercase; margin-top: auto; }
+        .powered-footer span { color: #ff3b30; font-size: 12px; display: block; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    
+    <div id="sys-popup" class="overlay">
+        <div class="modal-box">
+            <span style="position:absolute; top:15px; right:20px; font-size:24px; color:#aaa; cursor:pointer;" onclick="document.getElementById('sys-popup').style.display='none'">&times;</span>
+            <i class="fa-solid fa-bell" style="font-size: 45px; color: #ff3b30; margin-bottom: 15px;"></i>
+            <h2 style="margin: 0 0 10px 0; font-weight: 900; color: #1a1a1a;">Announcement</h2>
+            <p id="popup-msg" style="color: #636e72; font-size: 14px; font-weight: 600; line-height: 1.5;"></p>
+            <button class="btn-red" style="margin-top: 15px;" onclick="document.getElementById('sys-popup').style.display='none'">Okay, Got it!</button>
+        </div>
+    </div>
+
+    <div id="success-modal" class="overlay">
+        <div class="modal-box">
+            <div class="success-circle"><i class="fa-solid fa-check"></i></div>
+            <h2 style="margin: 0 0 10px 0; font-weight: 900; color: #00b894;">Congratulations!</h2>
+            <p style="color: #636e72; font-size: 14px; font-weight: 600;">Product purchased successfully. Your live earnings have started!</p>
+            <button class="btn-red" style="margin-top: 15px; background: linear-gradient(135deg, #00b894, #009e7e); box-shadow: 0 8px 20px rgba(0,184,148,0.3);" onclick="document.getElementById('success-modal').style.display='none'; navSub('orders');">View My Purchases</button>
+        </div>
+    </div>
+
+    <div id="recharge-modal" class="overlay">
+        <div class="modal-box">
+            <span style="position:absolute; top:15px; right:15px; font-size:20px; cursor:pointer;" onclick="document.getElementById('recharge-modal').style.display='none'">&times;</span>
+            <h3 style="margin-top:0; font-weight:800;">Add Funds</h3>
+            <div class="chip-grid" id="recharge-chips"></div>
+            <div class="input-wrapper"><i class="fa-solid fa-indian-rupee-sign"></i><input type="number" id="rech-amt" class="input-box" placeholder="Enter Amount"></div>
+            <button class="btn-red" onclick="processRecharge()">Proceed to Pay</button>
+        </div>
+    </div>
+
+    <div id="withdraw-modal" class="overlay">
+        <div class="modal-box">
+            <span style="position:absolute; top:15px; right:15px; font-size:20px; cursor:pointer;" onclick="document.getElementById('withdraw-modal').style.display='none'">&times;</span>
+            <h3 style="margin-top:0; font-weight:800;">Withdraw Earning</h3>
+            <div class="input-wrapper"><i class="fa-solid fa-indian-rupee-sign"></i><input type="number" id="wd-amt" class="input-box" placeholder="Amount"></div>
+            <p id="min-wd-text" style="font-size:11px; color:#ff3b30; font-weight:bold; margin-top:-5px; margin-bottom:15px; text-align:left;">Min Withdrawal: ₹280</p>
+            <div class="input-wrapper"><i class="fa-solid fa-key"></i><input type="password" id="wd-pass" class="input-box" placeholder="Withdrawal Password"></div>
+            <button class="btn-red" onclick="processWithdraw()">Withdraw Now</button>
+        </div>
+    </div>
+
+    <div class="app-container">
+        
+        <div id="view-auth" class="view-section active-view" style="justify-content: center;">
+            <div class="brand-header">
+                <img src="" class="dynamic-logo brand-logo-img" style="display:none;" onerror="this.style.display='none'">
+                <h1 class="brand-name">RY<span>LINES</span></h1>
+            </div>
+
+            <div class="tab-container"><div class="tab active" id="tab-log" onclick="switchAuth('log')">Login</div><div class="tab" id="tab-reg" onclick="switchAuth('reg')">Register</div></div>
+
+            <div id="form-log">
+                <div class="input-wrapper"><i class="fa-solid fa-phone"></i><input type="tel" id="log-phone" class="input-box" placeholder="Phone Number"></div>
+                <div class="input-wrapper"><i class="fa-solid fa-lock"></i><input type="password" id="log-pass" class="input-box" placeholder="Password"></div>
+                <button class="btn-red" onclick="login()">Secure Login</button>
+            </div>
+
+            <div id="form-reg" style="display: none;">
+                <div class="input-wrapper"><i class="fa-solid fa-user"></i><input type="text" id="reg-name" class="input-box" placeholder="Full Name"></div>
+                <div class="input-wrapper"><i class="fa-solid fa-phone"></i><input type="tel" id="reg-phone" class="input-box" placeholder="Phone Number"></div>
+                <div class="input-wrapper"><i class="fa-solid fa-lock"></i><input type="password" id="reg-pass" class="input-box" placeholder="Password"></div>
+                <div class="input-wrapper"><i class="fa-solid fa-key"></i><input type="password" id="reg-wpass" class="input-box" placeholder="Withdraw Password"></div>
+                <button class="btn-red" onclick="register()">Create Account</button>
+            </div>
+            <div class="powered-footer">Secured By <span class="dynamic-powered-text">Rylines</span></div>
+        </div>
+
+        <div id="view-home" class="view-section">
+            <div class="home-brand-top">
+                <h1 class="home-brand-title">RY<span>LINES</span></h1>
+                <img src="" class="dynamic-logo" style="display:none; max-height:30px;" onerror="this.style.display='none'">
+            </div>
+
+            <div style="margin-bottom: 15px;">
+                <p style="margin:0; font-size:12px; font-weight:800; color:#888;">Welcome Back,</p>
+                <h3 id="user-display-name" style="margin:0; font-size:22px; font-weight:900; color:#1a1a1a; text-transform:capitalize;">Loading...</h3>
+            </div>
+
+            <div class="carousel-container" id="banner-container"></div>
+            <div class="marquee-box"><i class="fa-solid fa-volume-high"></i><marquee id="home-marquee" scrollamount="4">Welcome to Rylines Platform!</marquee></div>
+
+            <div class="action-row">
+                <div class="action-btn" onclick="document.getElementById('recharge-modal').style.display='flex'"><i class="fa-solid fa-wallet"></i><br><span>Recharge</span></div>
+                <div class="action-btn" onclick="nav('products', document.querySelectorAll('.nav-link')[1])"><i class="fa-solid fa-box-open"></i><br><span>Products</span></div>
+            </div>
+
+            <h3 style="font-weight: 900; font-size: 18px; margin-top: 0;">Trending Products</h3>
+            <div id="home-products"></div>
+            <div class="powered-footer">Powered By <span class="dynamic-powered-text">Rylines</span></div>
+        </div>
+
+        <div id="view-products" class="view-section">
+            <div class="home-brand-top"><h2 style="font-weight: 900; margin: 0;">Our Products</h2></div>
+            <div class="tab-container">
+                <div class="tab active" onclick="filterProd('Advance', this)">Advance</div>
+                <div class="tab" onclick="filterProd('VIP', this)">VIP</div>
+            </div>
+            <div id="all-products"></div>
+            <div class="powered-footer">Powered By <span class="dynamic-powered-text">Rylines</span></div>
+        </div>
+
+        <div id="view-profile" class="view-section">
+            <div class="home-brand-top">
+                <h2 style="font-weight: 900; margin: 0;">My Profile</h2>
+                <div style="font-size:16px; font-weight:800; color:#1a1a1a; text-transform:capitalize;" id="prof-name">User</div>
+            </div>
+            
+            <div class="recharge-top-bar">
+                <div>
+                    <div style="font-size:10px; font-weight:800; color:#888;">RECHARGE WALLET</div>
+                    <div style="font-size:22px; font-weight:900; color:#1a1a1a;">₹<span id="u-recharge">0.00</span></div>
+                </div>
+                <button class="btn-red" style="width:auto; padding:10px 20px; box-shadow:none;" onclick="document.getElementById('recharge-modal').style.display='flex'">Recharge</button>
+            </div>
+            
+            <div class="debit-card">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div class="dc-chip"></div>
+                    <i class="fa-brands fa-cc-mastercard" style="font-size: 40px; opacity:0.8;"></i>
+                </div>
+                <div>
+                    <div class="dc-code" id="user-unique-code">**** **** **** ****</div>
+                    <p style="margin:0; font-size:10px; font-weight:800; opacity:0.8; letter-spacing:1px;">ACCESS KEY</p>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top:20px;">
+                    <div>
+                        <p style="margin:0; font-size:10px; font-weight:800; opacity:0.8;">LIVE EARNING BALANCE</p>
+                        <p style="margin:0; font-size:26px; font-weight:900; font-family:monospace;">₹<span class="u-balance">0.00</span></p>
+                    </div>
+                    <button style="background: #fff; color: #ff3b30; padding: 8px 18px; border-radius: 10px; font-weight: 900; font-size: 13px; border: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.2);" onclick="checkBankAndWithdraw()">Withdraw</button>
+                </div>
+            </div>
+
+            <div class="menu-list">
+                <div class="menu-item" onclick="navSub('orders')"><div><i class="fa-solid fa-chart-line icon-left"></i> My Purchases</div><i class="fa-solid fa-chevron-right"></i></div>
+                <div class="menu-item" onclick="navSub('bank')"><div><i class="fa-solid fa-landmark icon-left"></i> Bank / UPI Setup</div><i class="fa-solid fa-chevron-right"></i></div>
+                <div class="menu-item" onclick="navSub('support')"><div><i class="fa-solid fa-headset icon-left"></i> Contact Support</div><i class="fa-solid fa-chevron-right"></i></div>
+                <div class="menu-item" onclick="auth.signOut()"><div><i class="fa-solid fa-power-off icon-left"></i> Logout</div></div>
+            </div>
+            <div class="powered-footer">Secured By <span class="dynamic-powered-text">Rylines</span></div>
+        </div>
+
+        <div id="view-bank" class="view-section">
+            <div class="home-brand-top"><div style="display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-arrow-left" style="color:#ff3b30; cursor:pointer; font-size:20px;" onclick="nav('profile')"></i> <h2 style="margin:0; font-weight:900;">Bank Setup</h2></div></div>
+            <div class="tab-container"><div class="tab active" onclick="switchBank('bank')">Bank Account</div><div class="tab" onclick="switchBank('upi')">UPI ID</div></div>
+            <div id="bank-form">
+                <input type="text" id="b-name" class="input-box" style="margin-bottom:15px;" placeholder="Account Holder Name">
+                <input type="number" id="b-acc" class="input-box" style="margin-bottom:15px;" placeholder="Account Number">
+                <input type="text" id="b-ifsc" class="input-box" style="margin-bottom:15px;" placeholder="IFSC Code">
+                <button class="btn-red" onclick="saveBankDetails('bank')">Save Bank</button>
+            </div>
+            <div id="upi-form" style="display:none;">
+                <input type="text" id="u-id" class="input-box" style="margin-bottom:15px;" placeholder="Enter UPI ID (e.g. name@ybl)">
+                <button class="btn-red" onclick="saveBankDetails('upi')">Save UPI</button>
+            </div>
+        </div>
+
+        <div id="view-orders" class="view-section">
+            <div class="home-brand-top"><div style="display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-arrow-left" style="color:#ff3b30; cursor:pointer; font-size:20px;" onclick="nav('profile')"></i> <h2 style="margin:0; font-weight:900;">My Purchases</h2></div></div>
+            <div id="my-orders-list"></div>
+        </div>
+
+        <div id="view-support" class="view-section">
+            <div class="home-brand-top"><div style="display:flex; align-items:center; gap:10px;"><i class="fa-solid fa-arrow-left" style="color:#ff3b30; cursor:pointer; font-size:20px;" onclick="nav('profile')"></i> <h2 style="margin:0; font-weight:900;">Contact Support</h2></div></div>
+            <p style="color:#888; font-size:14px; font-weight:600; text-align:center; margin-bottom:20px;">If you have any issues, please contact us via the links below.</p>
+            <div class="support-grid" id="support-list"></div>
+        </div>
+
+        <div class="bottom-nav" id="main-nav" style="display: none;">
+            <div class="nav-link active" onclick="nav('home', this)"><i class="fa-solid fa-house"></i><span>Home</span></div>
+            <div class="nav-link" onclick="nav('products', this)"><i class="fa-solid fa-box"></i><span>Products</span></div>
+            <div class="nav-link" onclick="nav('profile', this)"><i class="fa-solid fa-user"></i><span>Profile</span></div>
+        </div>
+
+    </div>
+
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyB9v3JC84FS1yBRRA183ORJiXRXcrAlD9A", authDomain: "aviator-indian.firebaseapp.com", databaseURL: "https://aviator-indian-default-rtdb.firebaseio.com", projectId: "aviator-indian" };
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth(); const db = firebase.database();
+        
+        let allProducts = {}; let currentUser = null; 
+        let staticRecharge = 0; let staticEarning = 0; let activePurchases = [];
+        let hasBankSetup = false; let minWithdraw = 280;
+
+        db.ref('settings').on('value', snap => {
+            const data = snap.val() || {};
+            document.querySelectorAll('.dynamic-powered-text').forEach(el => el.innerText = data.branding?.poweredByText || "Rylines");
+            document.querySelectorAll('.dynamic-logo').forEach(el => { if(data.branding?.logoUrl) { el.src = data.branding.logoUrl; el.style.display = 'inline-block'; }});
+            document.getElementById('home-marquee').innerText = data.marquee || "Welcome to Rylines Platform!";
+            
+            minWithdraw = data.minWithdraw || 280;
+            document.getElementById('min-wd-text').innerText = `Min Withdrawal: ₹${minWithdraw}`;
+
+            const chipsBox = document.getElementById('recharge-chips');
+            chipsBox.innerHTML = '';
+            if(data.rechargeAmounts) {
+                data.rechargeAmounts.split(',').forEach(amt => {
+                    if(amt.trim()) chipsBox.innerHTML += `<div class="amt-chip" onclick="setAmt(${amt.trim()})">₹${amt.trim()}</div>`;
+                });
+            }
+            
+            const bBox = document.getElementById('banner-container');
+            bBox.innerHTML = '';
+            if(data.banners) {
+                data.banners.split(',').forEach((url, i) => { 
+                    if(url.trim()) bBox.innerHTML += `<img src="${url.trim()}" class="carousel-slide ${i===0?'active-slide':''}">`; 
+                });
+            }
+
+            const sBox = document.getElementById('support-list');
+            sBox.innerHTML = '';
+            if(data.supportLinks && data.supportLinks.length > 0) {
+                data.supportLinks.forEach(l => {
+                    sBox.innerHTML += `<div class="support-card" onclick="window.open('${l.url}', '_blank')"><i class="fa-brands fa-whatsapp"></i><div style="font-weight:800; font-size:14px;">${l.name}</div></div>`;
+                });
+            } else {
+                sBox.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:#888;">No support links added yet.</p>`;
+            }
+        });
+
+        // Forced Popup on every load/login
+        function checkPopup() {
+            db.ref('settings/popupMessage').once('value', snap => {
+                const msg = snap.val();
+                if(msg && msg.trim() !== "") {
+                    document.getElementById('popup-msg').innerText = msg;
+                    document.getElementById('sys-popup').style.display = 'flex';
+                }
+            });
+        }
+
+        setInterval(() => {
+            let slides = document.querySelectorAll('.carousel-slide');
+            if(slides.length > 1) {
+                let activeIdx = Array.from(slides).findIndex(s => s.classList.contains('active-slide'));
+                if(activeIdx === -1) activeIdx = 0;
+                slides[activeIdx].classList.remove('active-slide');
+                let nextIdx = (activeIdx + 1) % slides.length;
+                slides[nextIdx].classList.add('active-slide');
+            }
+        }, 3000);
+
+        function setAmt(val) { document.getElementById('rech-amt').value = val; }
+
+        auth.onAuthStateChanged(user => {
+            if(user) {
+                currentUser = user;
+                nav('home', document.querySelectorAll('.nav-link')[0]);
+                document.getElementById('main-nav').style.display = 'flex';
+                
+                let rawUid = user.uid.padEnd(16, '0').substr(0,16).toUpperCase();
+                let code = rawUid.replace(/[A-J]/g,'0').replace(/[K-Z]/g,'1');
+                document.getElementById('user-unique-code').innerText = code.match(/.{1,4}/g).join(' ');
+                
+                db.ref('users/'+user.uid).on('value', s => {
+                    const uData = s.val() || {};
+                    if(uData.status === 'blocked') { alert("Account blocked by Admin."); auth.signOut(); return; }
+                    
+                    const dispName = uData.name && uData.name.trim() !== "" ? uData.name : "User";
+                    document.getElementById('user-display-name').innerText = dispName;
+                    document.getElementById('prof-name').innerText = dispName;
+                    
+                    staticRecharge = Number(uData.rechargeWallet || 0);
+                    staticEarning = Number(uData.earningWallet || 0);
+                    document.getElementById('u-recharge').innerText = staticRecharge.toFixed(2);
+                    
+                    hasBankSetup = !!uData.bankSetup;
+
+                    activePurchases = [];
+                    if(uData.purchases) {
+                        for(let k in uData.purchases) activePurchases.push({key: k, ...uData.purchases[k]});
+                        renderOrders(uData.purchases);
+                    } else renderOrders({});
+                });
+                loadProducts();
+                setTimeout(checkPopup, 1000); // Show popup after 1 sec of login
+            } else {
+                document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active-view'));
+                document.getElementById('view-auth').classList.add('active-view');
+                document.getElementById('main-nav').style.display = 'none';
+                currentUser = null;
+            }
+        });
+
+        let currentLiveBalance = 0;
+        setInterval(() => {
+            if(!currentUser) return;
+            let totalLiveEarned = 0; 
+            const now = Date.now();
+            activePurchases.forEach(p => { 
+                let msPassed = now - p.timestamp;
+                let earnedFromThis = msPassed * (p.dailyIncome / 86400000);
+                totalLiveEarned += earnedFromThis;
+                const itemBox = document.getElementById(`live-earn-${p.key}`);
+                if(itemBox) itemBox.innerText = earnedFromThis.toFixed(4);
+            });
+
+            currentLiveBalance = staticEarning + totalLiveEarned;
+            document.querySelectorAll('.u-balance').forEach(el => el.innerText = currentLiveBalance.toFixed(4));
+        }, 1000);
+
+        function switchAuth(t) {
+            document.querySelectorAll('#view-auth .tab').forEach(x=>x.classList.remove('active'));
+            document.getElementById('tab-'+t).classList.add('active');
+            document.getElementById('form-log').style.display = t==='log'?'block':'none';
+            document.getElementById('form-reg').style.display = t==='reg'?'block':'none';
+        }
+
+        function nav(view, el=null) {
+            if(el) { document.querySelectorAll('.nav-link').forEach(n=>n.classList.remove('active')); el.classList.add('active'); }
+            document.querySelectorAll('.view-section').forEach(v=>v.classList.remove('active-view'));
+            document.getElementById('view-'+view).classList.add('active-view');
+        }
+        function navSub(view) { document.querySelectorAll('.view-section').forEach(v=>v.classList.remove('active-view')); document.getElementById('view-'+view).classList.add('active-view'); }
+
+        function switchBank(type) {
+            document.querySelectorAll('#view-bank .tab').forEach(t=>t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('bank-form').style.display = type==='bank'?'block':'none';
+            document.getElementById('upi-form').style.display = type==='upi'?'block':'none';
+        }
+
+        function register() {
+            const n=document.getElementById('reg-name').value.trim(), p=document.getElementById('reg-phone').value.trim(), pw=document.getElementById('reg-pass').value.trim();
+            if(n&&p&&pw) auth.createUserWithEmailAndPassword(p+"@rylines.com", pw).then(c=>db.ref('users/'+c.user.uid).set({name:n, phone:p, rechargeWallet:0, earningWallet:0, status:'active'})).catch(e=>alert(e.message));
+        }
+        function login() {
+            const p=document.getElementById('log-phone').value.trim(), pw=document.getElementById('log-pass').value.trim();
+            if(p&&pw) auth.signInWithEmailAndPassword(p+"@rylines.com", pw).catch(e=>alert("Invalid details"));
+        }
+
+        function saveBankDetails(type) {
+            let data = {};
+            if(type==='bank') {
+                const n=document.getElementById('b-name').value, a=document.getElementById('b-acc').value, i=document.getElementById('b-ifsc').value;
+                if(!n||!a||!i) return alert("Fill all fields");
+                data = { type: 'Bank', name: n, acc: a, ifsc: i };
+            } else {
+                const u=document.getElementById('u-id').value;
+                if(!u) return alert("Enter UPI ID");
+                data = { type: 'UPI', upiId: u };
+            }
+            db.ref('users/'+currentUser.uid+'/bankSetup').set(data).then(()=>alert("Account Setup Successful!"));
+        }
+
+        function checkBankAndWithdraw() {
+            if(!hasBankSetup) { alert("Bank/UPI is not set up! Please set it up before withdrawing."); navSub('bank'); return; }
+            document.getElementById('withdraw-modal').style.display='flex';
+        }
+
+        function processWithdraw() {
+            const a = Number(document.getElementById('wd-amt').value);
+            const pass = document.getElementById('wd-pass').value;
+            if(a < minWithdraw) return alert(`Minimum withdrawal is ₹${minWithdraw}`);
+            if(!pass) return alert("Enter withdrawal password!");
+            if(a > currentLiveBalance) return alert("Insufficient Live Earning Balance!");
+
+            db.ref('users/'+currentUser.uid+'/withdrawalPassword').once('value', s=>{
+                if(s.val() !== pass && s.val() != null) return alert("Incorrect Withdrawal Password!");
+                
+                let harvested = 0; const now = Date.now();
+                let updates = {};
+                activePurchases.forEach(p => {
+                    harvested += (now - p.timestamp) * (p.dailyIncome / 86400000);
+                    updates[`users/${currentUser.uid}/purchases/${p.key}/timestamp`] = now;
+                });
+                
+                updates[`users/${currentUser.uid}/earningWallet`] = (staticEarning + harvested) - a;
+                
+                // Add to Admin Withdrawals
+                const wdRef = db.ref('withdrawals').push();
+                updates[`withdrawals/${wdRef.key}`] = { uid: currentUser.uid, phone: currentUser.email.replace('@rylines.com',''), amount: a, status: 'pending', date: new Date().toLocaleDateString() };
+
+                db.ref().update(updates).then(() => {
+                    alert("Withdrawal Request Submitted Successfully!");
+                    document.getElementById('withdraw-modal').style.display='none';
+                    document.getElementById('wd-amt').value = '';
+                });
+            });
+        }
+
+        // 🔥 Naya ZapUPI POST API Integration 🔥
+        async function processRecharge() {
+            const amtInput = document.getElementById('rech-amt');
+            const amt = Number(amtInput.value);
+            if(amt <= 0 || isNaN(amt)) return alert("Enter valid amount!");
+
+            const apiKey = "Zapd63d9b77ab984d6f35941fd02ccab7c5"; 
+            
+            // Order ID hamesha unique hona chahiye (UID + Timestamp)
+            const uniqueOrderId = currentUser ? currentUser.uid + "_" + Date.now() : "USER_" + Date.now(); 
+            const phone = currentUser && currentUser.email ? currentUser.email.replace('@rylines.com','') : "9999999999";
+
+            // ZapUPI API ke hisaab se Data (JSON)
+            const payload = {
+                "zap_key": apiKey,
+                "order_id": uniqueOrderId,
+                "amount": amt.toString(),
+                "customer_mobile": phone,
+                "remark": "Wallet Recharge",
+                "success_url": "https://ryline.vercel.app",
+                "failed_url": "https://ryline.vercel.app",
+                "timeout_url": "https://ryline.vercel.app"
+            };
+
+            try {
+                // Button/Input par loading dikhane ke liye
+                amtInput.value = 'Wait...';
+
+                // API POST request
+                const response = await fetch("https://pay.zapupi.com/api/create-order", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+
+                // Agar success hua toh ZapUPI ke payment page par bhejo
+                if (data.status === "success" && data.payment_url) {
+                    window.location.href = data.payment_url;
+                } else {
+                    alert("ZapUPI Error: " + (data.message || "Payment page nahi khula."));
+                    amtInput.value = amt; // amount wapas laao
+                }
+            } catch (error) {
+                alert("Network Error! Thodi der mein try karein.");
+                amtInput.value = amt; // amount wapas laao
+            }
+        }
+
+        function loadProducts() {
+            db.ref('products').on('value', snap => {
+                allProducts = snap.val() || {};
+                filterProd('Advance', document.querySelector('.prod-tabs .tab.active') || document.querySelector('.prod-tabs .tab'));
+                renderProd('all', document.getElementById('home-products'), 2);
+            });
+        }
+
+        function filterProd(cat, el) {
+            document.querySelectorAll('#view-products .tab').forEach(t=>t.classList.remove('active'));
+            if(el) el.classList.add('active');
+            renderProd(cat, document.getElementById('all-products'));
+        }
+
+        function renderProd(cat, box, limit=null) {
+            box.innerHTML = ''; let c=0;
+            for(let key in allProducts) {
+                if(limit && c>=limit) break;
+                const p = allProducts[key];
+                if(cat !== 'all' && p.category && !p.category.toLowerCase().includes(cat.toLowerCase())) continue;
+                c++;
+                
+                const isVIP = p.category && p.category.toLowerCase().includes('vip');
+                const cardClass = isVIP ? 'prod-card vip-card' : 'prod-card';
+                const btnClass = isVIP ? 'btn-red btn-vip' : 'btn-red';
+                
+                box.innerHTML += `
+                <div class="${cardClass}">
+                    <img src="${p.image}" class="prod-img" onerror="this.src='https://via.placeholder.com/400x170/eee/ff3b30?text=Product'">
+                    <div class="prod-body">
+                        <div class="prod-cat">${p.category || 'Advance'}</div>
+                        <h4 class="prod-title">${p.name}</h4>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-box">
+                                <div class="stat-icon"><i class="fa-solid fa-coins"></i></div>
+                                <div class="stat-box-right">
+                                    <span class="stat-label">Daily</span>
+                                    <span class="stat-val">₹${p.dailyIncome}</span>
+                                </div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-icon"><i class="fa-regular fa-calendar-check"></i></div>
+                                <div class="stat-box-right">
+                                    <span class="stat-label">Cycle</span>
+                                    <span class="stat-val">${p.validityDays} D</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="prod-footer">
+                            <div class="price-text">₹${p.price}</div>
+                            <button class="${btnClass}" style="width:auto; padding:12px 20px; border-radius:12px;" onclick="buyProd('${key}', ${p.price}, ${p.dailyIncome}, '${p.name}')">Buy Now</button>
+                        </div>
+                    </div>
+                </div>`;
+            }
+            if(c===0) box.innerHTML = '<div style="text-align:center; padding:30px; color:#888; font-weight:bold;">No products found.</div>';
+        }
+
+        function buyProd(id, price, dailyInc, name) {
+            if(!currentUser) return;
+            if(staticRecharge < price) { alert("Insufficient Balance in Recharge Wallet! Please deposit funds."); return; }
+            if(confirm("Confirm purchase: " + name + " for ₹" + price + "?")) {
+                db.ref('users/'+currentUser.uid).update({ rechargeWallet: staticRecharge - price }).then(() => {
+                    db.ref('users/'+currentUser.uid+'/purchases').push({ productId: id, name: name, price: price, dailyIncome: dailyInc, timestamp: Date.now(), date: new Date().toLocaleDateString() })
+                      .then(() => {
+                          document.getElementById('success-modal').style.display = 'flex';
+                      });
+                }).catch(err => alert("Error: " + err.message));
+            }
+        }
+
+        function renderOrders(purchases) {
+            const box = document.getElementById('my-orders-list');
+            if(Object.keys(purchases).length === 0) {
+                box.innerHTML = '<div style="text-align:center; padding:40px 20px; color:#aaa;"><i class="fa-solid fa-box-open" style="font-size:50px; margin-bottom:15px; color:#ddd;"></i><h3 style="margin:0; color:#888;">No Active Orders</h3><p style="font-size:13px;">You haven\'t purchased any products yet.</p></div>'; return;
+            }
+            box.innerHTML = '';
+            for(let k in purchases) {
+                const o = purchases[k];
+                box.innerHTML += `
+                <div class="order-card">
+                    <div class="order-top">
+                        <div class="order-icon"><i class="fa-solid fa-cube"></i></div>
+                        <div style="flex-grow: 1;">
+                            <h4 style="margin:0 0 5px 0; font-size: 16px; color:#2d3436; font-weight:800;">${o.name}</h4>
+                            <p style="margin:0; font-size:12px; color:#888; font-weight:700;"><i class="fa-regular fa-calendar"></i> Bought: ${o.date}</p>
+                        </div>
+                    </div>
+                    <div class="live-earn-box">
+                        <div style="font-size:10px; color:#888; font-weight:800; letter-spacing:1px; margin-bottom:5px;">LIVE EARNING</div>
+                        <div class="live-earn-text">₹ <span id="live-earn-${k}">0.0000</span></div>
+                    </div>
+                </div>`;
+            }
+        }
+    </script>
+</body>
+</html>
