@@ -502,15 +502,26 @@
             });
         }
 
-        function processRecharge() {
-            const amt = Number(document.getElementById('rech-amt').value);
-            if(amt <= 0) return alert("Enter valid amount!");
-            db.ref('users/'+currentUser.uid+'/rechargeWallet').set(staticRecharge + amt).then(() => {
-                alert("Recharge Successful! Added to Recharge Wallet.");
-                document.getElementById('recharge-modal').style.display='none';
-                document.getElementById('rech-amt').value = '';
-            });
-        }
+        function submitUTR() {
+    const amt = Number(document.getElementById('rech-amt').value);
+    if(!amt || amt <= 0) return alert("Please enter valid amount.");
+
+    // 🔥 Aapki integrated Zapupi API Key 🔥
+    const apiKey = "Zapd63d9b77ab984d6f35941fd02ccab7c5"; 
+    
+    // Backend ko yahi se pata chalega ki paise kisko dene hain
+    const orderId = currentUser.uid; 
+    const name = document.getElementById('user-display-name').innerText || "User";
+    const email = currentUser.email;
+    const phone = currentUser.email.replace('@rylines.com','');
+
+    // Zapupi Checkout Page URL
+    const paymentUrl = `https://api.zapupi.com/pay?api_key=${apiKey}&amount=${amt}&order_id=${orderId}&name=${name}&email=${email}&phone=${phone}`;
+    
+    // User ko direct payment page par bhejna
+    window.location.href = paymentUrl;
+}
+
 
         function loadProducts() {
             db.ref('products').on('value', snap => {
